@@ -71,7 +71,7 @@ public class MainActivity extends Activity implements RecognitionListener {
             protected Exception doInBackground(Void... params) {
                 try {
                     reconoce.onBeginningOfSpeech();
-
+                    micro();
                 } catch (Exception e) {
                     return e;
                 }
@@ -107,33 +107,18 @@ public class MainActivity extends Activity implements RecognitionListener {
      * for final result in onResult.
      */
 
-
-    /**
-     * This callback is called when we stop the recognizer.
-     */
-
     @Override
     public void onReadyForSpeech(Bundle bundle) {
-        textToSpeech = new TextToSpeech();
+
+    }
+
+
+
+    public void micro(View v,String searchName) {
+
+        textToSpeech = new TextToSpeech(this, (TextToSpeech.OnInitListener) this);
         textToSpeech.setLanguage(new Locale("spa", "ESP"));
-    }
 
-    @Override
-    public void onBeginningOfSpeech(String searchName) {
-        recognizer.destroy();
-
-        // If we are not spotting, start listening with timeout (10000 ms or 10 seconds).
-        if (searchName.equals(KWS_SEARCH))
-            recognizer.startListening(micro(v));
-        else
-            recognizer.startListening(10000);
-
-        String caption = getResources().getString(captions.get(searchName));
-        ((TextView) findViewById(R.id.intro_text)).setText(caption);
-
-    }
-
-    public void micro(View v) {
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         // Indicamos el modelo de lenguaje para el intent
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
@@ -142,6 +127,19 @@ public class MainActivity extends Activity implements RecognitionListener {
         intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "¿Qué es lo que quieres hacer?");
         // Lanzamos la actividad esperando resultados
         startActivityForResult(intent, VOICE_RECOGNITION_REQUEST_CODE);
+        recognizer.destroy();
+
+        // If we are not spotting, start listening with timeout (10000 ms or 10 seconds).
+        if (searchName.equals(KWS_SEARCH))
+            recognizer.startListening(intent);
+        else
+            recognizer.startListening(intent);
+
+        String caption = getResources().getString(captions.get(searchName));
+        ((TextView) findViewById(R.id.intro_text)).setText(caption);
+    }
+    @Override
+    public void onBeginningOfSpeech() {
     }
 
     @Override
@@ -153,17 +151,15 @@ public class MainActivity extends Activity implements RecognitionListener {
     public void onBufferReceived(byte[] bytes) {
 
     }
-
+    /***** We stop recognizer here to get a final result *****/
     @Override
     public void onEndOfSpeech() {
-        if (!recognizer.getSearchName().equals(KWS_SEARCH))
-            onBeginningOfSpeech(KWS_SEARCH);
+        if (!recognizer.equals(KWS_SEARCH))
+
 
     }
 
-    /**
-     * We stop recognizer here to get a final result
-     */
+
 
     @Override
     public void onError(int i) {
@@ -184,7 +180,6 @@ public class MainActivity extends Activity implements RecognitionListener {
     public void onEvent(int i, Bundle bundle) {
 
     }
-
 
     @Override
     public void onStart() {
